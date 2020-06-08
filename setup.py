@@ -6,7 +6,7 @@ try:
     here = os.path.abspath(os.path.dirname(__file__))
     with open(os.path.join(here, "requirements.txt")) as f:
         required = [
-            l.strip("\n") for l in f if l.strip("\n") and not l.startswith("#")
+            line.strip("\n") for line in f if line.strip("\n") and not line.startswith("#")
         ]
 except IOError:
     required = []
