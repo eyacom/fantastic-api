@@ -9,6 +9,7 @@ def test_list_todo():
     t2 = DAO.get(t1['id'])
     assert t2 is not None
     assert t2['task'] == t1['task']
+    assert t2['createdAt'] is not None
 
 
 def test_empty_todo():
