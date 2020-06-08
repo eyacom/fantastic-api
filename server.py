@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
+from datetime import datetime
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
@@ -18,6 +19,9 @@ todo = api.model(
         'id':
         fields.Integer(readOnly=True,
                        description='The task unique identifier'),
+        'createdAt':
+        fields.DateTime(readOnly=True,
+                        description='datetime value of task creation time'),
         'task':
         fields.String(required=True, description='The task details')
     })
@@ -38,6 +42,7 @@ class TodoDAO(object):
     def create(self, data):
         todo = data
         todo['id'] = self.counter = self.counter + 1
+        todo['createdAt'] = datetime.now()
         self.todos.append(todo)
         return todo
 
