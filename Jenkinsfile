@@ -29,7 +29,7 @@ pipeline {
 	}
 
     parameters {
-        string(name: 'SLACK_CHANNEL', defaultValue:'U011V1A6ACE', description: 'slack channel to notify')
+        string(name: 'SLACK_CHANNEL', defaultValue:'#fantastic-api', description: 'slack channel to notify')
            }
     
 
@@ -43,34 +43,38 @@ pipeline {
     	
         stage ('Install venv') {
             steps {
-                sh 'apt update && apt install -y python3-venv'
+                sh 'apt update && apt install -y python3-venv python3.8-venv'
             }
         }
         stage ('activate virtual environment') {
             steps {
-                sh 'python 3.8 -m venv venv'
-		sh 'source venv/bin/activate'
+                sh 'python3.8 -m venv venv'
+                
+		        sh '. venv/bin/activate'
             }
         }
 	
         stage ('install requirements') {
             steps {
-                sh 'pip install wheel'
-		sh 'pip install -r requirements.txt'
-		sh 'pip install tox pytest pytest-cov flake8'
+                sh 'venv/bin/pip install wheel'
+		sh 'venv/bin/pip  install -r requirements.txt'
+		sh 'venv/bin/pip install tox pytest pytest-cov flake8'
             }
         }
 
 	stage ('run tests') {
 		steps {
-			sh 'flake8'
-			sh 'pytest'
-			sh 'tox'
+			sh 'venv/bin/tox > toxscreen.txt'
+			archiveArtifacts artifacts: 'toxscreen.txt'
+			sh 'venv/bin/pytest --junitxml=report.xml'
 		}
 	}
     }
     
     post {
+        always {
+            junit 'report.xml'
+        }
         success {
             slackSend color: 'good',
                           message: """
