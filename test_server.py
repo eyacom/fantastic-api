@@ -5,10 +5,11 @@ def test_list_todo():
     DAO = TodoDAO()
     t1 = DAO.create({'task': 'test-todo'})
     assert t1 is not None
-    assert t1['id'] > 0
-    t2 = DAO.get(t1['id'])
+    key_t1 = DAO.todos.copy().popitem()[0]
+    assert key_t1 > 0
+    t2 = DAO.get(key_t1)
     assert t2 is not None
-    assert t2['task'] == t1['task']
+    assert t2 == t1
 
 
 def test_empty_todo():
