@@ -12,11 +12,11 @@ api = Api(
 )
 
 ns = api.namespace('todos', description='TODO operations')
-
+#this model is not used for this version
 todo = api.model(
     'Todo', {
         'id':
-        fields.String(readOnly=True,
+        fields.Integer(readOnly=True,
                        description='The task unique identifier'),
         'task':
         fields.String(required=True, description='The task details')
