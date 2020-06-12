@@ -26,29 +26,30 @@ todo = api.model(
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = []
+        self.todos = {}
 
     def get(self, id):
-        for todo in self.todos:
+        for cle in self.todos:
+            todo=self.todos[cle]
             # TODO : Improve the searching complexity to O(1) using hashmap structure
             if todo['id'] == id:
-                return todo
+                return cle,todo
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
         todo = data
         todo['id'] = self.counter = self.counter + 1
-        self.todos.append(todo)
+        self.todos[self.counter]=todo
         return todo
 
     def update(self, id, data):
-        todo = self.get(id)
+        i,todo = self.get(id)
         todo.update(data)
         return todo
 
     def delete(self, id):
-        todo = self.get(id)
-        self.todos.remove(todo)
+        i,todo = self.get(id)
+        del self.todos[i]
 
 
 DAO = TodoDAO()
@@ -64,7 +65,7 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return DAO.todos
+        return list(DAO.todos.values())
 
     @ns.doc('create_todo')
     @ns.expect(todo)
@@ -83,7 +84,7 @@ class Todo(Resource):
     @ns.marshal_with(todo)
     def get(self, id):
         '''Fetch a given resource'''
-        return DAO.get(id)
+        return DAO.get(id)[1]
 
     @ns.doc('delete_todo')
     @ns.response(204, 'Todo deleted')
