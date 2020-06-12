@@ -9,7 +9,7 @@ def test_list_todo():
     t2 = DAO.get(t1['id'])
     assert t2 is not None
     assert t2['task'] == t1['task']
-
+    assert t2['createdAt'] is not None 
 
 def test_empty_todo():
     DAO = TodoDAO()
@@ -32,7 +32,7 @@ def none_task():
     if t2['task'] is None:
         raise AssertionError("Invalid null task!")
 
-# TODO : add test raise exception when task is absent
+# TODO : add test raise exception when task is absent -->  ToCheck 
 def test_notfound_todo():
     with pytest.raises(TaskNotFoundException):
         empty_task()
