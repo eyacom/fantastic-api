@@ -1,10 +1,15 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
 from datetime import datetime
+from flask import Flask
+from flask.ext.sqlalchemy import SQLAlchemy
+
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+db = SQLAlchemy(app)
 api = Api(
     app,
     version='1.0',
@@ -27,33 +32,56 @@ todo = api.model(
     })
 
 
-class TodoDAO(object):
-    def __init__(self):
+   
+
+class TodoDAO(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    createdAt = db.Column(db.String(120), unique=True)
+     task = db.Column(db.DateTime, default=datetime.utcnow, 
+                          onupdate=datetime.utcnow)
+
+
+
+    def __init__(self,counter,todos):
         self.counter = 0
         self.todos = []
+        
+   def __repr__(self):
+       
+rep =TodoDAO.query.all()
+return rep
+
+
 
     def get(self, id):
         for todo in self.todos:
             # TODO : Improve the searching complexity to O(1) using hashmap structure
+            todo = TodoDAO.query.filter_by(id='id').first()
             if todo['id'] == id:
+                
                 return todo
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
-        todo = data
-        todo['id'] = self.counter = self.counter + 1
-        todo['createdAt'] = datetime.now()
-        self.todos.append(todo)
+        todo = TodoDAO(task= data['task'])
+        db.session.add(todo)
+        db.session.commit()
         return todo
+    
 
     def update(self, id, data):
-        todo = self.get(id)
-        todo.update(data)
+        todo = TodoDAO.query.filter_by(id=id).first()  
+        todo.task = data['task']    
+        db.session.commit()
         return todo
+        
+        
 
     def delete(self, id):
-        todo = self.get(id)
-        self.todos.remove(todo)
+        
+        todo = TodoDAO.query.filter_by(id=id).first()        
+        db.session.delete(todo)  
+        db.session.commit()
 
 
 DAO = TodoDAO()
