@@ -26,29 +26,31 @@ todo = api.model(
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = []
+        # We will use a dictionnary (Hashmap built-in in Python) : the key will be the id and the value will be the task
+        self.todos = {}
+      
 
     def get(self, id):
-        for todo in self.todos:
-            # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+        Todo = {}
+        Todo['id'] = id
+        Todo['task'] = self.todos[id]  
+        return Todo   
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
         todo = data
-        todo['id'] = self.counter = self.counter + 1
-        self.todos.append(todo)
+        todo['id'] = id = self.counter = self.counter + 1
+        todo['task'] = self.todos[id] = data['task'] 
         return todo
 
     def update(self, id, data):
-        todo = self.get(id)
-        todo.update(data)
+        todo = data 
+        todo['id'] = id
+        todo['task'] = self.todos[id] = data['task']
         return todo
 
     def delete(self, id):
-        todo = self.get(id)
-        self.todos.remove(todo)
+        del self.todos[id]
 
 
 DAO = TodoDAO()
@@ -61,7 +63,7 @@ DAO.create({'task': 'profit!'})
 class TodoList(Resource):
     '''Shows a list of all todos, and lets you POST to add new tasks'''
     @ns.doc('list_todos')
-    @ns.marshal_list_with(todo)
+    #@ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
         return DAO.todos
@@ -80,7 +82,7 @@ class TodoList(Resource):
 class Todo(Resource):
     '''Show a single todo item and lets you delete them'''
     @ns.doc('get_todo')
-    @ns.marshal_with(todo)
+    #@ns.marshal_with(todo)
     def get(self, id):
         '''Fetch a given resource'''
         return DAO.get(id)
