@@ -30,20 +30,20 @@ todo = api.model(
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = []
+        self.todos = {}
 
     def get(self, id):
-        for todo in self.todos:
-            # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+        # we return the data if a key  corresponding to the ID exists in our dictionary
+        if self.todos.get(id):
+            return self.todos.get(id)
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
+        # we create a new Dictionary entry with the ID as the key and our data as the value
         todo = data
-        todo['id'] = self.counter = self.counter + 1
+        todo['id'] = id = self.counter = self.counter + 1
         todo['createdAt'] = datetime.now()
-        self.todos.append(todo)
+        self.todos[id] = todo
         return todo
 
     def update(self, id, data):
@@ -52,11 +52,11 @@ class TodoDAO(object):
         return todo
 
     def delete(self, id):
-        todo = self.get(id)
-        self.todos.remove(todo)
+        self.todos.pop(id)
 
 
 DAO = TodoDAO()
+
 DAO.create({'task': 'Build an API'})
 DAO.create({'task': '?????'})
 DAO.create({'task': 'profit!'})
@@ -69,7 +69,9 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return DAO.todos
+        # we take only the values to get the desired format
+        alltodos = list(DAO.todos.values())
+        return alltodos
 
     @ns.doc('create_todo')
     @ns.expect(todo)

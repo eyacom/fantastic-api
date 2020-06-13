@@ -1,4 +1,6 @@
 from server import TodoDAO
+import pytest
+from werkzeug.exceptions import NotFound
 
 
 def test_list_todo():
@@ -18,5 +20,9 @@ def test_empty_todo():
 
 
 # TODO : add test raise exception when task is absent
+
 def test_notfound_todo():
-    pass
+    DAO = TodoDAO()
+    # if todo id is absent api.abort will raise a 404 Not Found HTTP Exception and the test will pass
+    with pytest.raises(NotFound):
+        assert DAO.get(99)
