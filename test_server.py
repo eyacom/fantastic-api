@@ -33,11 +33,13 @@ def check_none_task():
     if t2['task'] == "":
         raise Exception("Task is absent Exception raised (Empty String)")
 
+
 def check_notfound_task():
     DAO = TodoDAO()
     t3 = DAO.create({})
     if 'task' not in t3:
         raise Exception("Task not Found Exception")
+
 
 def test_notfound_todo():
     with pytest.raises(Exception):

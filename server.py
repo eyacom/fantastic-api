@@ -69,7 +69,7 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        # we take only the values to get the desired format 
+        # we take only the values to get the desired format
         alltodos = list(DAO.todos.values())
         return alltodos
 
