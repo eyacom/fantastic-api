@@ -13,7 +13,7 @@ pipeline {
         ).trim()
 	GIT_LATEST_COMMIT_MESSAGE= sh(
 		returnStdout:true,
-		script: 'git log -1 --pretty=%B'
+		script: 'git log -1 --pretty=%B | head -1'
 	).trim()
 	GIT_STAT= sh(
 		returnStdout: true,
@@ -64,8 +64,7 @@ pipeline {
 
 	stage ('run tests') {
 		steps {
-			sh 'venv/bin/tox > toxscreen.txt'
-			archiveArtifacts artifacts: 'toxscreen.txt'
+			sh 'venv/bin/tox '
 			sh 'venv/bin/pytest --junitxml=report.xml'
 		}
 	}
