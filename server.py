@@ -1,9 +1,18 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
+from flask_sqlalchemy import SQLAlchemy
+import os
+from datetime import datetime
+class Config(object):
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///Todos.db'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
+app.config.from_object(Config)
+db = SQLAlchemy(app)
+
 api = Api(
     app,
     version='1.0',
@@ -18,38 +27,55 @@ todo = api.model(
         'id':
         fields.Integer(readOnly=True,
                        description='The task unique identifier'),
+         'createdAt':
+        fields.DateTime(readOnly=True,
+                        description='datetime value of task creation time'),
+
         'task':
         fields.String(required=True, description='The task details')
     })
-
+class TodoTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    task = db.Column(db.String(140))
+    def row2dict(row):
+        d = {}
+        for column in row.__table__.columns:
+            d[column.name] = str(getattr(row, column.name))
+            return d
+    def __repr__(self):
+        return row2dict(self)
 
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = {}
+        self.todos = []
 
     def get(self, id):
-        for cle in self.todos:
-            todo=self.todos[cle]
+        todo = TodoTask.query.filter_by(id=id).first()
+
             # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return cle,todo
+        return todo
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
         todo = data
-        todo['id'] = self.counter = self.counter + 1
-        self.todos[self.counter]=todo
+        new = TodoTask(task=todo['task'])
+        db.session.add(new)
+        db.session.commit()
         return todo
 
     def update(self, id, data):
-        i,todo = self.get(id)
-        todo.update(data)
+        todo = TodoTask.query.filter_by(id=id).first()
+        todo.task = data['task']
+        db.session.commit()
         return todo
 
     def delete(self, id):
-        i,todo = self.get(id)
-        del self.todos[i]
+        todo = TodoTask.query.filter_by(id=id).first() 
+        db.session.delete(todo)  
+        db.session.commit()
+    def listAll(self):
+        return TodoTask.query.all()
 
 
 DAO = TodoDAO()
@@ -65,7 +91,7 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return list(DAO.todos.values())
+        return DAO.listAll()
 
     @ns.doc('create_todo')
     @ns.expect(todo)
@@ -84,7 +110,7 @@ class Todo(Resource):
     @ns.marshal_with(todo)
     def get(self, id):
         '''Fetch a given resource'''
-        return DAO.get(id)[1]
+        return DAO.get(id)
 
     @ns.doc('delete_todo')
     @ns.response(204, 'Todo deleted')
