@@ -8,7 +8,7 @@ Fantastic-API  is a recruitment test to check the candidate performance on :
 ## TODO
 
 - Follow the instructions below to clone and run this project 
-- Explores and make a proposal for the issues opened by @yurilaaziz 
+- Explore and make a proposal for the issues opened by @yurilaaziz 
 
 
 ## Installation
