@@ -26,7 +26,7 @@ def empty_task():
     DAO = TodoDAO()
     t = DAO.create({'task': ''})
     # If the task is empty
-    if not t['task']:
+    if not t.task:
         raise TaskNotFoundException("Exception TaskNotFound raised")
 
 
@@ -34,7 +34,7 @@ def none_task():
     DAO = TodoDAO()
     t2 = DAO.create({'task': None})
     # If the task is null
-    if t2['task'] is None:
+    if t2.task is None:
         raise AssertionError("Invalid null task!")
 
 
