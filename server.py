@@ -1,12 +1,12 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
-from flask_sqlalchemy  import SQLAlchemy 
+from flask_sqlalchemy import SQLAlchemy
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///E:\\fantastic-api\\bdeyacomtest.db' 
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///E:\\fantastic-api\\bd.db'
 db = SQLAlchemy(app)
 
 api = Api(
@@ -18,20 +18,22 @@ api = Api(
 
 ns = api.namespace('todos', description='TODO operations')
 
-class TodoDB(db.Model): 
-    #__tablename__ = 'todos'
-    id_t = db.Column('id_t', db.Integer, primary_key=True)
-    task = db.Column('task', db.String(300))
-    
-class TodoDAO(object):     
-    def get(self, id): 
+
+class TodoDB(db.Model):
+        # __tablename__ = 'todos'
+        id_t = db.Column('id_t', db.Integer, primary_key=True)
+        task = db.Column('task', db.String(300))
+
+
+class TodoDAO(object):
+    def get(self, id):
         todo = TodoDB.query.filter_by(id_t=id)
         return todo
         api.abort(404, "Todo {} doesn't exist".format(id))
 
-    def getAll(self): 
+    def get_all(self):
         todo = TodoDB.query.all()
-        return todo 
+        return todo
 
     def create(self, data):
         todo_task = data['task']
@@ -43,34 +45,28 @@ class TodoDAO(object):
 
     def update(self, id, data):
         todo = TodoDB.query.filter_by(id_t=id)
-        todo.task = data['task']    
+        todo.task = data['task']
         db.session.commit()
         return todo
 
     def delete(self, id):
-        todo = TodoDB.query.filter_by(id_t=id)      
-        db.session.delete(todo)  
+        todo = TodoDB.query.filter_by(id_t=id)
+        db.session.delete(todo)
         db.session.commit()
 
-    #the method below will be used in the test
-    def isNull(self)
-        return TodoDB.query.count() == 0
-    
-
-
 DAO = TodoDAO()
+
 
 @ns.route('/')
 class TodoList(Resource):
     '''Shows a list of all todos, and lets you POST to add new tasks'''
     @ns.doc('list_todos')
-    #@ns.marshal_list_with(todo)
+    # @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return DAO.getAll()
+        return DAO.get_all()
 
     @ns.doc('create_todo')
-
     def post(self):
         '''Create a new task'''
         return DAO.create(api.payload), 201
@@ -82,7 +78,7 @@ class TodoList(Resource):
 class Todo(Resource):
     '''Show a single todo item and lets you delete them'''
     @ns.doc('get_todo')
-    #@ns.marshal_with(todo)
+    # @ns.marshal_with(todo)
     def get(self, id):
         '''Fetch a given resource'''
         return DAO.get(id)

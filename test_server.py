@@ -1,4 +1,5 @@
 from server import TodoDAO
+import pytest
 
 
 def test_list_todo():
@@ -11,11 +12,25 @@ def test_list_todo():
     assert t2.task == t1.task
 
 
-def test_empty_todo():
+# Function to check if the task is empty or not
+def empty_todo():
     DAO = TodoDAO()
-    assert DAO.isNull()
+    t = DAO.create(0)
+    if t.task == '':
+        raise Exception("Task is empty")
 
 
-# TODO : add test raise exception when task is absent
+# Function to check if the task is found or not
+def notfound_todo():
+    DAO = TodoDAO()
+    t = DAO.create({'task': None})
+    if t.task is None:
+        raise Exception("Task not found")
+
+
+# Test raise exception when task is absent added
 def test_notfound_todo():
-    pass
+    with pytest.raises(Exception):
+        notfound_todo()
+    with pytest.raises(Exception):
+        empty_todo()
