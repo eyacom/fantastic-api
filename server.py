@@ -1,9 +1,14 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
+from flask_sqlalchemy  import SQLAlchemy 
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///E:\\fantastic-api\\bdeyacomtest.db' 
+db = SQLAlchemy(app)
+
 api = Api(
     app,
     version='1.0',
@@ -13,51 +18,47 @@ api = Api(
 
 ns = api.namespace('todos', description='TODO operations')
 
-todo = api.model(
-    'Todo', {
-        'id':
-        fields.Integer(readOnly=True,
-                       description='The task unique identifier'),
-        'task':
-        fields.String(required=True, description='The task details')
-    })
-
-
-class TodoDAO(object):
-    def __init__(self):
-        self.counter = 0
-        # We will use a dictionnary (Hashmap built-in in Python) : the key will be the id and the value will be the task
-        self.todos = {}
-      
-
-    def get(self, id):
-        Todo = {}
-        Todo['id'] = id
-        Todo['task'] = self.todos[id]  
-        return Todo   
+class TodoDB(db.Model): 
+    #__tablename__ = 'todos'
+    id_t = db.Column('id_t', db.Integer, primary_key=True)
+    task = db.Column('task', db.String(300))
+    
+class TodoDAO(object):     
+    def get(self, id): 
+        todo = TodoDB.query.filter_by(id_t=id)
+        return todo
         api.abort(404, "Todo {} doesn't exist".format(id))
 
+    def getAll(self): 
+        todo = TodoDB.query.all()
+        return todo 
+
     def create(self, data):
-        todo = data
-        todo['id'] = id = self.counter = self.counter + 1
-        todo['task'] = self.todos[id] = data['task'] 
+        todo_task = data['task']
+        todo_id = TodoDB.query.count() + 1
+        todo = TodoDB(todo_id, todo_task)
+        db.session.add(todo)
+        db.session.commit()
         return todo
 
     def update(self, id, data):
-        todo = data 
-        todo['id'] = id
-        todo['task'] = self.todos[id] = data['task']
+        todo = TodoDB.query.filter_by(id_t=id)
+        todo.task = data['task']    
+        db.session.commit()
         return todo
 
     def delete(self, id):
-        del self.todos[id]
+        todo = TodoDB.query.filter_by(id_t=id)      
+        db.session.delete(todo)  
+        db.session.commit()
+
+    #the method below will be used in the test
+    def isNull(self)
+        return TodoDB.query.count() == 0
+    
 
 
 DAO = TodoDAO()
-DAO.create({'task': 'Build an API'})
-DAO.create({'task': '?????'})
-DAO.create({'task': 'profit!'})
-
 
 @ns.route('/')
 class TodoList(Resource):
@@ -66,11 +67,10 @@ class TodoList(Resource):
     #@ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return DAO.todos
+        return DAO.getAll()
 
     @ns.doc('create_todo')
-    @ns.expect(todo)
-    @ns.marshal_with(todo, code=201)
+
     def post(self):
         '''Create a new task'''
         return DAO.create(api.payload), 201
@@ -94,8 +94,6 @@ class Todo(Resource):
         DAO.delete(id)
         return '', 204
 
-    @ns.expect(todo)
-    @ns.marshal_with(todo)
     def put(self, id):
         '''Update a task given its identifier'''
         return DAO.update(id, api.payload)
