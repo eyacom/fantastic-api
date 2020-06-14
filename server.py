@@ -30,20 +30,18 @@ todo = api.model(
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = []
+        self.todos = {}
 
     def get(self, id):
-        for todo in self.todos:
-            # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+        # we return the key that has his own correspanding id existing in the dictionary 
+        return self.todos.get(id)
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
         todo = data
-        todo['id'] = self.counter = self.counter + 1
+        todo['id'] = id = self.counter = self.counter + 1
         todo['createdAt'] = datetime.now()
-        self.todos.append(todo)
+        self.todos[id] = todo
         return todo
 
     def update(self, id, data):
@@ -52,8 +50,8 @@ class TodoDAO(object):
         return todo
 
     def delete(self, id):
-        todo = self.get(id)
-        self.todos.remove(todo)
+        #delete the element that his key correspond the id 
+        self.todos.pop(id)
 
 
 DAO = TodoDAO()
@@ -69,7 +67,7 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return DAO.todos
+        return list(DAO.todos.values)
 
     @ns.doc('create_todo')
     @ns.expect(todo)
