@@ -6,31 +6,30 @@ def test_list_todo():
     DAO = TodoDAO()
     t1 = DAO.create({'task': 'test-todo'})
     assert t1 is not None
-    assert t1['id'] > 0
-    t2 = DAO.get(t1['id'])
+    assert t1.id > 0
+    t2 = DAO.get(t1.id)
     assert t2 is not None
-    assert t2['task'] == t1['task']
-    assert t2['createdAt'] is not None
+    assert t2.task == t1.task
+    assert t2.createdAt is not None
 
 
 def test_empty_todo():
+    # we test that our Db is not empty
     DAO = TodoDAO()
-    assert len(DAO.todos) == 0
+    assert len(DAO.getAll()) != 0
 
-
-# TODO : add test raise exception when task is absent
 
 def check_empty_task():
     DAO = TodoDAO()
     t1 = DAO.create({'task': None})
-    if not t1['task']:
+    if not t1.task:
         raise Exception("Task is absent Exception (None found)")
 
 
 def check_none_task():
     DAO = TodoDAO()
     t2 = DAO.create({'task': ''})
-    if t2['task'] == "":
+    if t2.task == "":
         raise Exception("Task is absent Exception raised (Empty String)")
 
 

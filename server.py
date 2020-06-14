@@ -1,10 +1,19 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
+from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import os
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
+basedir = os.path.abspath(os.path.dirname(__file__))
+# Database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'db.sqlite')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Init db
+db = SQLAlchemy(app)
+
 api = Api(
     app,
     version='1.0',
@@ -26,40 +35,46 @@ todo = api.model(
         fields.String(required=True, description='The task details')
     })
 
+# flask_alchemy Model that represents the schema of our sql table
+
+
+class TodoModel(db.Model):
+    __tablename__ = 'todos'
+    id = db.Column('id', db.Integer, primary_key=True)
+    createdAt = db.Column('createdAt', db.DateTime)
+    task = db.Column('task', db.String(300), nullable=False)
+
 
 class TodoDAO(object):
-    def __init__(self):
-        self.counter = 0
-        self.todos = {}
-
     def get(self, id):
-        # we return the data if a key  corresponding to the ID exists in our dictionary
-        if self.todos.get(id):
-            return self.todos.get(id)
+        todo = TodoModel.query.filter_by(id=id).first()
+        return todo
         api.abort(404, "Todo {} doesn't exist".format(id))
 
+    def getAll(self):
+        todo = TodoModel.query.all()
+        return todo
+
     def create(self, data):
-        # we create a new Dictionary entry with the ID as the key and our data as the value
-        todo = data
-        todo['id'] = id = self.counter = self.counter + 1
-        todo['createdAt'] = datetime.now()
-        self.todos[id] = todo
+        # id is automatically autoincremented by SQLAlchemy
+        todo = TodoModel(createdAt=datetime.now(), task=data['task'])
+        db.session.add(todo)
+        db.session.commit()
         return todo
 
     def update(self, id, data):
-        todo = self.get(id)
-        todo.update(data)
+        todo = TodoModel.query.filter_by(id=id)
+        todo.task = data['task']
+        db.session.commit()
         return todo
 
     def delete(self, id):
-        self.todos.pop(id)
+        todo = TodoModel.query.filter_by(id=id)
+        db.session.delete(todo)
+        db.session.commit()
 
 
 DAO = TodoDAO()
-
-DAO.create({'task': 'Build an API'})
-DAO.create({'task': '?????'})
-DAO.create({'task': 'profit!'})
 
 
 @ns.route('/')
@@ -69,9 +84,7 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        # we take only the values to get the desired format
-        alltodos = list(DAO.todos.values())
-        return alltodos
+        return DAO.getAll()
 
     @ns.doc('create_todo')
     @ns.expect(todo)
@@ -90,6 +103,7 @@ class Todo(Resource):
     @ns.marshal_with(todo)
     def get(self, id):
         '''Fetch a given resource'''
+        # print(DAO.get(id))
         return DAO.get(id)
 
     @ns.doc('delete_todo')
