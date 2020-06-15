@@ -30,20 +30,20 @@ todo = api.model(
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = []
+        self.todos = {}
 
     def get(self, id):
         for todo in self.todos:
             # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+            if self.todos[id] is not None:
+                return self.todos[id]
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
         todo = data
         todo['id'] = self.counter = self.counter + 1
         todo['createdAt'] = datetime.now()
-        self.todos.append(todo)
+        self.todos[self.counter] = todo
         return todo
 
     def update(self, id, data):
