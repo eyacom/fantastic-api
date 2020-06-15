@@ -76,14 +76,22 @@ class TodoDAO(object):
 
     def update(self, id, data):
         todo = TodoModel.query.filter_by(id=id)
-        todo.task = data['task']
-        db.session.commit()
-        return todo
+        if todo is not None:
+            # we transform the SQLAlchemy row object to a Dictionary
+            todoDict = todo.__dict__
+            # we remove the field created by SQLAlchemy
+            todoDict.pop('_sa_instance_state', None)
+            todo.task = data['task']
+            db.session.commit()
+            return todoDict
+        api.abort(404, "Todo {} doesn't exist".format(id))
 
     def delete(self, id):
         todo = TodoModel.query.filter_by(id=id)
-        db.session.delete(todo)
-        db.session.commit()
+        if todo is not None:
+            db.session.delete(todo)
+            db.session.commit()
+        api.abort(404, "Todo {} doesn't exist".format(id))
 
 
 DAO = TodoDAO()
