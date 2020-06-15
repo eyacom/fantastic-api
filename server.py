@@ -68,8 +68,8 @@ class TodoDAO(object):
         db.session.add(todo)
         db.session.commit()
         todoDict = {}
-        #in order transform the todo Model object to a dict 
-        #we loop through the model's attributes and construct the Dictionary
+        # in order transform the todo Model object to a dict
+        # we loop through the model's attributes and construct the Dictionary
         for c in inspect(todo).mapper.column_attrs:
             todoDict[c.key] = getattr(todo, c.key)
         return todoDict
