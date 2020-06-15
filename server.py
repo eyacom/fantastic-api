@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import inspect
 from datetime import datetime
 import os
 
@@ -48,10 +49,16 @@ class TodoModel(db.Model):
 class TodoDAO(object):
     def get(self, id):
         todo = TodoModel.query.filter_by(id=id).first()
-        return todo
+        if todo is not None:
+            # we transform the SQLAlchemy row object to a Dictionary
+            todoDict = todo.__dict__
+            # we remove the field created by SQLAlchemy
+            todoDict.pop('_sa_instance_state', None)
+            return todoDict
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def getAll(self):
+        # returns a list of all todos
         todo = TodoModel.query.all()
         return todo
 
@@ -60,7 +67,12 @@ class TodoDAO(object):
         todo = TodoModel(createdAt=datetime.now(), task=data['task'])
         db.session.add(todo)
         db.session.commit()
-        return todo
+        todoDict = {}
+        #in order transform the todo Model object to a dict 
+        #we loop through the model's attributes and construct the Dictionary
+        for c in inspect(todo).mapper.column_attrs:
+            todoDict[c.key] = getattr(todo, c.key)
+        return todoDict
 
     def update(self, id, data):
         todo = TodoModel.query.filter_by(id=id)
@@ -103,7 +115,6 @@ class Todo(Resource):
     @ns.marshal_with(todo)
     def get(self, id):
         '''Fetch a given resource'''
-        # print(DAO.get(id))
         return DAO.get(id)
 
     @ns.doc('delete_todo')

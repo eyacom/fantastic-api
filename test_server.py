@@ -6,11 +6,11 @@ def test_list_todo():
     DAO = TodoDAO()
     t1 = DAO.create({'task': 'test-todo'})
     assert t1 is not None
-    assert t1.id > 0
-    t2 = DAO.get(t1.id)
+    assert t1['id'] > 0
+    t2 = DAO.get(t1['id'])
     assert t2 is not None
-    assert t2.task == t1.task
-    assert t2.createdAt is not None
+    assert t2['task'] == t1['task']
+    assert t2['createdAt'] is not None
 
 
 def test_empty_todo():
