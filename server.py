@@ -27,18 +27,19 @@ class TodoDAO(object):
     def __init__(self):
         self.counter = 0
         self.todos = []
+        self.ids = {}
 
     def get(self, id):
-        for todo in self.todos:
-            # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+        # TODO : Improve the searching complexity to O(1) using hashmap structure
+        if id in self.ids:
+            return self.ids[id]
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
         todo = data
         todo['id'] = self.counter = self.counter + 1
         self.todos.append(todo)
+        self.ids[todo['id']] = todo
         return todo
 
     def update(self, id, data):
