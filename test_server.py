@@ -1,4 +1,6 @@
 from server import TodoDAO
+import pytest
+from werkzeug.exceptions import NotFound
 
 
 def test_list_todo():
@@ -17,6 +19,7 @@ def test_empty_todo():
     assert len(DAO.todos) == 0
 
 
-# TODO : add test raise exception when task is absent
 def test_notfound_todo():
-    pass
+    DAO = TodoDAO()
+    with pytest.raises(NotFound):
+        assert DAO.get(99)
