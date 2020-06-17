@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import inspect
 from datetime import datetime
 import os
 
@@ -63,15 +62,15 @@ class TodoDAO(object):
         return todo
 
     def create(self, data):
-        # id is automatically autoincremented by SQLAlchemy
-        todo = TodoModel(createdAt=datetime.now(), task=data['task'])
+        # we create a dicitonary object and using it we create a Model
+        todoDict = {}
+        todoDict['createdAt'] = datetime.now()
+        todoDict['task'] = data['task']
+        todo = TodoModel(createdAt=todoDict['createdAt'], task=todoDict['task'])
         db.session.add(todo)
         db.session.commit()
-        todoDict = {}
-        # in order transform the todo Model object to a dict
-        # we loop through the model's attributes and construct the Dictionary
-        for c in inspect(todo).mapper.column_attrs:
-            todoDict[c.key] = getattr(todo, c.key)
+        # id is automatically autoincremented by SQLAlchemy
+        todoDict['id'] = todo.id
         return todoDict
 
     def update(self, id, data):
