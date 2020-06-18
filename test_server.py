@@ -8,8 +8,8 @@ def test_list_todo():
     assert t1['id'] > 0
     t2 = DAO.get(t1['id'])
     assert t2 is not None
-    assert t2['task'] == t1['task']
-    assert t2['createdAt'] is not None
+    assert t2 == t1['task']
+    assert t1['createdAt'] is not None
 
 
 def test_empty_todo():
@@ -17,6 +17,8 @@ def test_empty_todo():
     assert len(DAO.todos) == 0
 
 
-# TODO : add test raise exception when task is absent
 def test_notfound_todo():
-    pass
+    DAO = TodoDAO()
+    empty_task = DAO.create({'task': ''})
+    if empty_task is None:
+        raise TypeError
