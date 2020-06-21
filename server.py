@@ -5,6 +5,7 @@ from datetime import datetime
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
+
 api = Api(
     app,
     version='1.0',
@@ -33,10 +34,9 @@ class TodoDAO(object):
         self.todos = []
 
     def get(self, id):
-        for todo in self.todos:
-            # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+        # Improving the search complexity to O(1) and verify input not empty
+        if id is not None and self.todos[id - 1]:
+            return self.todos[id - 1]
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
