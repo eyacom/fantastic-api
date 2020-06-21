@@ -33,10 +33,8 @@ class TodoDAO(object):
         self.todos = []
 
     def get(self, id):
-        for todo in self.todos:
-            # TODO : Improve the searching complexity to O(1) using hashmap structure
-            if todo['id'] == id:
-                return todo
+        if self.todos[id -1] :
+            return self.todos[id -1]
         api.abort(404, "Todo {} doesn't exist".format(id))
 
     def create(self, data):
