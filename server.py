@@ -35,7 +35,7 @@ class TodoDAO(object):
 
     def get(self, id):
         # Improving the search complexity to O(1) and verify input not empty
-        if self.todos[id - 1] and id is not None:
+        if id is not None and self.todos[id - 1]:
             return self.todos[id - 1]
         api.abort(404, "Todo {} doesn't exist".format(id))
 
