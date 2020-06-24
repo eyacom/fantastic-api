@@ -19,4 +19,7 @@ def test_empty_todo():
 
 # TODO : add test raise exception when task is absent
 def test_notfound_todo():
-    pass
+    DAO = TodoDAO()
+    t = DAO.get(1000000)
+    if not t :
+        raise Exception("NOT FOUND")
