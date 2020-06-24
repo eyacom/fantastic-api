@@ -14,7 +14,7 @@ def test_list_todo():
 
 def test_empty_todo():
     DAO = TodoDAO()
-    assert len(DAO.todos) == 0
+    assert len(DAO.getAll()) != 0
 
 
 # TODO : add test raise exception when task is absent

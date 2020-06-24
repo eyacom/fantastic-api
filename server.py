@@ -1,10 +1,25 @@
 from flask import Flask
 from flask_restx import Api, Resource, fields
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
 # THIS CODE IS DERIVATED FROM THE EXAMPLE OF Flask-RESTX EXTENSION
 
 app = Flask(__name__)
+
+# DataBase configuration
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+# Initialise db
+db = SQLAlchemy(app)
+
+
+# create the schema of db
+class DBModel (db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    createdAt = db.Column(db.DateTime, default=datetime.now())
+    task = db.Column(db.String(80),  nullable=False)
+
 
 api = Api(
     app,
@@ -31,35 +46,58 @@ todo = api.model(
 class TodoDAO(object):
     def __init__(self):
         self.counter = 0
-        self.todos = []
 
     def get(self, id):
-        # Improving the search complexity to O(1)
-        if id > 0 and self.todos[id - 1]:
-            return self.todos[id - 1]
+        # searching for the wanted task
+        todo = DBModel.query.filter_by(id=id).first()
+        if todo is not None:
+            # Convert sqlalchemy row object to python dict
+            todo_d = todo.__dict__
+            # remove the sqlalchemy extra data
+            todo_d.pop('_sa_instance_state', None)
+            return todo_d
         api.abort(404, "Todo {} doesn't exist".format(id))
 
+    def getAll(self):
+        # query all db
+        todos = DBModel.query.all()
+        return todos
+
     def create(self, data):
-        todo = data
-        todo['id'] = self.counter = self.counter + 1
-        todo['createdAt'] = datetime.now()
-        self.todos.append(todo)
-        return todo
+        todo_d = {}
+        todo_d['id'] = self.counter = self.counter + 1
+        todo_d['createdAt'] = datetime.now()
+        todo_d['task'] = data['task']
+        todo = DBModel(id=todo_d['id'], createdAt=todo_d['createdAt'], task=todo_d['task'])
+        db.session.add(todo)
+        db.session.commit()
+        return todo_d
 
     def update(self, id, data):
-        todo = self.get(id)
-        todo.update(data)
-        return todo
+        # searching for the wanted task
+        todo = DBModel.query.filter_by(id=id).first()
+        if todo is not None:
+            # Convert sqlalchemy row object to python dict
+            todo_d = todo.__dict__
+            # remove the sqlalchemy extra data
+            todo_d.pop('_sa_instance_state', None)
+            todo_d['task'] = data['task']
+            db.session.commit()
+            return todo_d
+        api.abort(404, "Todo {} doesn't exist".format(id))
 
     def delete(self, id):
-        todo = self.get(id)
-        self.todos.remove(todo)
+        # search for the task
+        todo = DBModel.query.filter_by(id=id).first()
+        if todo is not None:
+            # This will let us Delete the task
+            db.session.delete(todo)
+            db.session.commit()
+        else:
+            api.abort(404, "Todo {} doesn't exist".format(id))
 
 
 DAO = TodoDAO()
-DAO.create({'task': 'Build an API'})
-DAO.create({'task': '?????'})
-DAO.create({'task': 'profit!'})
 
 
 @ns.route('/')
@@ -69,7 +107,7 @@ class TodoList(Resource):
     @ns.marshal_list_with(todo)
     def get(self):
         '''List all tasks'''
-        return DAO.todos
+        return DAO.getAll()
 
     @ns.doc('create_todo')
     @ns.expect(todo)
